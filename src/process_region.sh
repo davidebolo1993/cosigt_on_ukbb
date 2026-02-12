@@ -3,7 +3,7 @@
 ################################################################################
 # COSIGT Pipeline - Region-Parallelized (Starting from .og graphs)
 # 
-# Usage: ./process.sh <region> <config_file> <threads> [cache_dir] [tmp_dir]
+# Usage: ./process_region.sh <region> <config_file> <threads> [cache_dir] [tmp_dir]
 #
 ################################################################################
 
