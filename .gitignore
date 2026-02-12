@@ -2,14 +2,8 @@ resources
 resources/*
 config
 config/*
-cosigt_ukbb
-cosigt_ukbb/*
 test/*fa
 test/*fai
-singularity_cache
-singularity_cache/*
-cosigt_ukbrap_small
-cosigt_ukbrap_small/*
 singularity/*
 singularity
 cosigt_small_test/*

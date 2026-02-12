@@ -137,7 +137,8 @@ RUN conda update -y conda && \
     r-rjson=0.2.23 \
     r-reshape2=1.4.4 \
     r-dbscan=1.2.2 \
-    r-cluster
+    r-cluster \
+    r-ggplot2
 
 # Activate conda environment by default
 RUN echo "source activate renv" > ~/.bashrc
