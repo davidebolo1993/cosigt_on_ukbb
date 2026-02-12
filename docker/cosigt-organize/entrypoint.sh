@@ -1,7 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
-cd /work 2>/dev/null || cd /
-
-# Run organize.py directly from the image
-exec python /usr/local/bin/organize.py "$@"
+# Pass all arguments to organize.sh
+exec /usr/local/bin/organize.sh "$@"

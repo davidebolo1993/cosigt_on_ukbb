@@ -1,19 +1,21 @@
-FROM python:3.9-slim
+FROM ubuntu:20.04
 
-RUN apt-get update && \
-    apt-get install -y git && \
-    rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install PyYAML
-RUN pip install --no-cache-dir pyyaml
+# Install minimal dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    coreutils \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /work
+# Copy organize script
+COPY organize.sh /usr/local/bin/organize.sh
+RUN chmod +x /usr/local/bin/organize.sh
 
-# Copy organize.py into the image
-COPY organize.py /usr/local/bin/organize.py
-RUN chmod +x /usr/local/bin/organize.py
-
+# Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+WORKDIR /work
 
 ENTRYPOINT ["/entrypoint.sh"]

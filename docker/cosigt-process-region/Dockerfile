@@ -92,18 +92,21 @@ RUN git clone --recursive https://github.com/pangenome/odgi.git && \
 RUN git clone https://github.com/AndreaGuarracino/gfainject && \
     cd gfainject && \
     cargo install --force --path . && \
+    cp target/release/gfainject /usr/local/bin/ && \
     cd .. && rm -rf gfainject
 
 # Install gafpack (Rust)
 RUN git clone https://github.com/pangenome/gafpack.git && \
     cd gafpack && \
     cargo install --force --path . && \
+    cp target/release/gafpack /usr/local/bin/ && \
     cd .. && rm -rf gafpack
 
 # Install panplexity (Rust)
 RUN git clone https://github.com/AndreaGuarracino/panplexity && \
     cd panplexity && \
     cargo install --force --path . && \
+    cp target/release/panplexity /usr/local/bin/ && \
     cd .. && rm -rf panplexity
 
 # Install cosigt (Go)
