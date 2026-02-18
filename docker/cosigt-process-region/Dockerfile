@@ -55,10 +55,10 @@ RUN wget https://github.com/samtools/htslib/releases/download/1.22/htslib-1.22.t
     cd .. && rm -rf htslib-1.22*
 
 # Install BWA-MEM2 2.2.1
-RUN wget -q https://github.com/bwa-mem2/bwa-mem2/releases/download/v2.2.1/bwa-mem2-2.2.1_x64-linux.tar.bz2 && \
-    tar -xf bwa-mem2-2.2.1_x64-linux.tar.bz2 && \
-    mv bwa-mem2-2.2.1_x64-linux/bwa-mem2* /usr/local/bin/ && \
-    rm -rf bwa-mem2-2.2.1*
+# RUN wget -q https://github.com/bwa-mem2/bwa-mem2/releases/download/v2.2.1/bwa-mem2-2.2.1_x64-linux.tar.bz2 && \
+#    tar -xf bwa-mem2-2.2.1_x64-linux.tar.bz2 && \
+#    mv bwa-mem2-2.2.1_x64-linux/bwa-mem2* /usr/local/bin/ && \
+#    rm -rf bwa-mem2-2.2.1*
 
 # Install bedtools 2.31.0
 RUN wget -q https://github.com/arq5x/bedtools2/releases/download/v2.31.0/bedtools.static && \
@@ -131,7 +131,7 @@ RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkg
 
 # Create conda R environment with required packages (minimal for our scripts)
 RUN conda update -y conda && \
-    conda create -y -n renv -c conda-forge \
+    conda create -y -n renv -c conda-forge -c bioconda \
     r-base=4.3.3 \
     r-data.table=1.16.4 \
     r-rjson=0.2.23 \
@@ -140,7 +140,8 @@ RUN conda update -y conda && \
     r-cluster \
     r-ggplot2 \
     r-gridextra \
-    r-r.utils
+    r-r.utils \
+    bwa-mem2
 
 # Activate conda environment by default
 RUN echo "source activate renv" > ~/.bashrc
