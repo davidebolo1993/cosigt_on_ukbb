@@ -170,6 +170,11 @@ if [ ! -f "${INPUT_DIR}/odgi/view/${CHROM}/${REGION}/${REGION}.gfa.gz" ]; then
     odgi view -i "$INPUT_GRAPH" -g --threads "$THREADS" | gzip > "$GFA_FILE"
     zgrep '^S' "$GFA_FILE" | awk '{print "node."$2"\t"length($3)}' > "$LENGTH_FILE"
     odgi paths -i "$INPUT_GRAPH" -H | cut -f 1,4- | gzip > "$PATHS_FILE"
+else
+    ODGI_DIR="${INPUT_DIR}/odgi"
+    GFA_FILE="${ODGI_DIR}/view/${CHROM}/${REGION}/${REGION}.gfa.gz"
+    PATHS_FILE="${ODGI_DIR}/paths/${CHROM}/${REGION}/${REGION}.tsv.gz"
+    LENGTH_FILE="${ODGI_DIR}/view/${CHROM}/${REGION}/${REGION}.node.length.tsv"
 fi
 
 ################################################################################
@@ -189,14 +194,14 @@ ALIGN_BED="${BEDTOOLS_DIR}/alignment_bed/${CHROM}/${REGION}/${REGION}.bed.gz"
 REGION_START=$(echo "$REGION" | rev | cut -d'_' -f2 | rev)
 REGION_END=$(echo "$REGION" | rev | cut -d'_' -f1 | rev)
 
-if [ ! -f "${INPUT_DIR}/bedtools/reference_bed/${CHROM}/${REGION}/${REGION}.bed.gz" ]; then
+if [ ! -f "${INPUT_DIR}/bedtools/alignment_bed/${CHROM}/${REGION}/${REGION}.bed.gz" ]; then
     echo "  Creating reference BED from region coordinates..."
     echo -e "${CHROM}\t${REGION_START}\t${REGION_END}" | gzip > "$REF_BED"
-fi
-
-if [ ! -f "${INPUT_DIR}/bedtools/alignment_bed/${CHROM}/${REGION}/${REGION}.bed.gz" ]; then
-    # For now, use same as reference BED
     cp "$REF_BED" "$ALIGN_BED"
+else
+    BEDTOOLS_DIR="${INPUT_DIR}/bedtools"
+    REF_BED="${BEDTOOLS_DIR}/reference_bed/${CHROM}/${REGION}/${REGION}.bed.gz"
+    ALIGN_BED="${BEDTOOLS_DIR}/alignment_bed/${CHROM}/${REGION}/${REGION}.bed.gz"
 fi
 
 ################################################################################
@@ -211,6 +216,7 @@ mkdir -p "$KFILT_DIR"
 KFILT_IDX="${KFILT_DIR}/${REGION}.kfilt.idx"
 
 if [ ! -f "${INPUT_DIR}/kfilt/index/${CHROM}/${REGION}/${REGION}.kfilt.idx" ]; then
+    
     MERYL_ALLELES="${OUTPUT_DIR}/meryl/${CHROM}/${REGION}/${REGION}"
     mkdir -p "$MERYL_ALLELES"
 
@@ -227,8 +233,11 @@ if [ ! -f "${INPUT_DIR}/kfilt/index/${CHROM}/${REGION}/${REGION}.kfilt.idx" ]; t
     kfilt build -k "$UNIQUE_KMERS" -K 31 -o "$KFILT_IDX"
 
     rm -rf "$MERYL_ALLELES" "$MERYL_DIFF"
+else
+    KFILT_DIR="${INPUT_DIR}/kfilt/index/${CHROM}/${REGION}"
+    KFILT_IDX="${KFILT_DIR}/${REGION}.kfilt.idx"
 fi
-
+    
 ################################################################################
 # Step 5: Node Filtering
 ################################################################################
@@ -247,9 +256,12 @@ if [ ! -f "${INPUT_DIR}/panplexity/${CHROM}/${REGION}/${REGION}.mask.tsv" ]; the
         --complexity linguistic \
         -m "$PANPLEXITY_MASK" \
         --threads "$THREADS"
+else
+    PANPLEXITY_DIR="${INPUT_DIR}/panplexity/${CHROM}/${REGION}"
+    PANPLEXITY_MASK="${PANPLEXITY_DIR}/${REGION}.mask.tsv"
 fi
-
-COMBINED_MASK="${ODGI_DIR}/paths/${CHROM}/${REGION}/${REGION}.mask.tsv"
+    
+COMBINED_MASK="${OUTPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}.mask.tsv"
 
 if [ ! -f "${INPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}.mask.tsv" ]; then
     echo "  Filtering coverage outliers..."
@@ -258,6 +270,8 @@ if [ ! -f "${INPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}.mask.tsv" ]; the
         "${ODGI_DIR}/paths/${CHROM}/${REGION}/${REGION}" \
         "$LENGTH_FILE" \
         "$PANPLEXITY_MASK"
+else
+    COMBINED_MASK="${INPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}.mask.tsv"
 fi
 
 ################################################################################
@@ -266,15 +280,18 @@ fi
 
 echo "[Step 6] Computing path dissimilarities and clustering"
 
-DISSIM_DIR="${ODGI_DIR}/dissimilarity/${CHROM}/${REGION}"
+DISSIM_DIR="${OUTPUT_DIR}/odgi/dissimilarity/${CHROM}/${REGION}"
 mkdir -p "$DISSIM_DIR"
 
 DISSIM_FILE="${DISSIM_DIR}/${REGION}.tsv.gz"
 
 if [ ! -f "${INPUT_DIR}/odgi/dissimilarity/${CHROM}/${REGION}/${REGION}.tsv.gz" ]; then
     odgi similarity -i "$INPUT_GRAPH" --all --distances --threads "$THREADS" | gzip > "$DISSIM_FILE"
+else
+    DISSIM_DIR="${INPUT_DIR}/odgi/dissimilarity/${CHROM}/${REGION}"
+    DISSIM_FILE="${DISSIM_DIR}/${REGION}.tsv.gz"
 fi
-
+    
 CLUSTER_DIR="${OUTPUT_DIR}/cluster/${CHROM}/${REGION}"
 mkdir -p "$CLUSTER_DIR"
 
@@ -283,6 +300,8 @@ CLUSTER_JSON="${CLUSTER_DIR}/${REGION}.clusters.json"
 if [ ! -f "${INPUT_DIR}/cluster/${CHROM}/${REGION}/${REGION}.clusters.json" ]; then
     Rscript /usr/local/bin/cluster.r \
         "$DISSIM_FILE" "$CLUSTER_JSON" "automatic" "100.0" "1"
+else
+    CLUSTER_JSON="${INPUT_DIR}/cluster/${CHROM}/${REGION}/${REGION}.clusters.json"
 fi
 
 ################################################################################
