@@ -139,7 +139,7 @@ fi
 
 ALLELES_FASTA="${ALLELES_DIR}/${REGION}.fasta.gz"
 
-if [ ! -f "$ALLELES_FASTA" ]; then
+if [ ! -f "${INPUT_DIR}/alleles/${CHROM}/${REGION}/${REGION}.fasta.gz" ]; then
     echo "  Extracting assemblies from graph..."
     odgi paths -i "$INPUT_GRAPH" -f | bgzip -c > "$ALLELES_FASTA"
     samtools faidx "$ALLELES_FASTA"
@@ -147,7 +147,7 @@ fi
 
 # Build BWA-MEM2 index
 echo "  Building BWA-MEM2 index..."
-if [ ! -f "${ALLELES_FASTA}.bwt.2bit.64" ]; then
+if [ ! -f "${INPUT_DIR}/alleles/${CHROM}/${REGION}/${REGION}.fasta.gz.bwt.2bit.64" ]; then
     bwa-mem2 index "$ALLELES_FASTA"
 fi
 
@@ -165,7 +165,7 @@ GFA_FILE="${ODGI_DIR}/view/${CHROM}/${REGION}/${REGION}.gfa.gz"
 PATHS_FILE="${ODGI_DIR}/paths/${CHROM}/${REGION}/${REGION}.tsv.gz"
 LENGTH_FILE="${ODGI_DIR}/view/${CHROM}/${REGION}/${REGION}.node.length.tsv"
 
-if [ ! -f "$GFA_FILE" ]; then
+if [ ! -f "${INPUT_DIR}/odgi/view/${CHROM}/${REGION}/${REGION}.gfa.gz" ]; then
     echo "  Converting to GFA and extracting paths..."
     odgi view -i "$INPUT_GRAPH" -g --threads "$THREADS" | gzip > "$GFA_FILE"
     zgrep '^S' "$GFA_FILE" | awk '{print "node."$2"\t"length($3)}' > "$LENGTH_FILE"
@@ -173,7 +173,7 @@ if [ ! -f "$GFA_FILE" ]; then
 fi
 
 ################################################################################
-# Step 3: Prepare BED Files (SIMPLIFIED - no resources/regions needed)
+# Step 3: Prepare BED Files
 ################################################################################
 
 echo "[Step 3] Preparing BED files"
@@ -189,13 +189,13 @@ ALIGN_BED="${BEDTOOLS_DIR}/alignment_bed/${CHROM}/${REGION}/${REGION}.bed.gz"
 REGION_START=$(echo "$REGION" | rev | cut -d'_' -f2 | rev)
 REGION_END=$(echo "$REGION" | rev | cut -d'_' -f1 | rev)
 
-if [ ! -f "$REF_BED" ]; then
+if [ ! -f "${INPUT_DIR}/bedtools/reference_bed/${CHROM}/${REGION}/${REGION}.bed.gz" ]; then
     echo "  Creating reference BED from region coordinates..."
     echo -e "${CHROM}\t${REGION_START}\t${REGION_END}" | gzip > "$REF_BED"
 fi
 
-if [ ! -f "$ALIGN_BED" ]; then
-    # For now, use same as reference BED (can be modified if needed)
+if [ ! -f "${INPUT_DIR}/bedtools/alignment_bed/${CHROM}/${REGION}/${REGION}.bed.gz" ]; then
+    # For now, use same as reference BED
     cp "$REF_BED" "$ALIGN_BED"
 fi
 
@@ -210,7 +210,7 @@ mkdir -p "$KFILT_DIR"
 
 KFILT_IDX="${KFILT_DIR}/${REGION}.kfilt.idx"
 
-if [ ! -f "$KFILT_IDX" ]; then
+if [ ! -f "${INPUT_DIR}/kfilt/index/${CHROM}/${REGION}/${REGION}.kfilt.idx" ]; then
     MERYL_ALLELES="${OUTPUT_DIR}/meryl/${CHROM}/${REGION}/${REGION}"
     mkdir -p "$MERYL_ALLELES"
 
@@ -240,7 +240,7 @@ mkdir -p "$PANPLEXITY_DIR"
 
 PANPLEXITY_MASK="${PANPLEXITY_DIR}/${REGION}.mask.tsv"
 
-if [ ! -f "$PANPLEXITY_MASK" ]; then
+if [ ! -f "${INPUT_DIR}/panplexity/${CHROM}/${REGION}/${REGION}.mask.tsv" ]; then
     panplexity \
         --input-gfa "$GFA_FILE" \
         -t auto -k 16 -w 100 -d 100 \
@@ -251,7 +251,7 @@ fi
 
 COMBINED_MASK="${ODGI_DIR}/paths/${CHROM}/${REGION}/${REGION}.mask.tsv"
 
-if [ ! -f "$COMBINED_MASK" ]; then
+if [ ! -f "${INPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}.mask.tsv" ]; then
     echo "  Filtering coverage outliers..."
     Rscript /usr/local/bin/coverage_outliers.r \
         "$PATHS_FILE" \
@@ -271,7 +271,7 @@ mkdir -p "$DISSIM_DIR"
 
 DISSIM_FILE="${DISSIM_DIR}/${REGION}.tsv.gz"
 
-if [ ! -f "$DISSIM_FILE" ]; then
+if [ ! -f "${INPUT_DIR}/odgi/dissimilarity/${CHROM}/${REGION}/${REGION}.tsv.gz" ]; then
     odgi similarity -i "$INPUT_GRAPH" --all --distances --threads "$THREADS" | gzip > "$DISSIM_FILE"
 fi
 
@@ -280,7 +280,7 @@ mkdir -p "$CLUSTER_DIR"
 
 CLUSTER_JSON="${CLUSTER_DIR}/${REGION}.clusters.json"
 
-if [ ! -f "$CLUSTER_JSON" ]; then
+if [ ! -f "${INPUT_DIR}/cluster/${CHROM}/${REGION}/${REGION}.clusters.json" ]; then
     Rscript /usr/local/bin/cluster.r \
         "$DISSIM_FILE" "$CLUSTER_JSON" "automatic" "100.0" "1"
 fi
@@ -406,6 +406,15 @@ process_sample() {
             -i "$SAMPLE" \
             -m "$COMBINED_MASK"
     fi
+
+    echo "    Cleaning up intermediaries..."
+    rm -rf \
+        "${OUTPUT_DIR}/samtools/fasta/${SAMPLE}/${CHROM}/${REGION}" \
+        "${OUTPUT_DIR}/kfilt/${SAMPLE}/${CHROM}/${REGION}" \
+        "${OUTPUT_DIR}/combine/${SAMPLE}/${CHROM}/${REGION}" \
+        "${OUTPUT_DIR}/bwa-mem2/${SAMPLE}/${CHROM}/${REGION}" \
+        "${OUTPUT_DIR}/gfainject/${SAMPLE}/${CHROM}/${REGION}" \
+        "${OUTPUT_DIR}/gafpack/${SAMPLE}/${CHROM}/${REGION}"
 
     echo "    ✓ Completed"
 }
