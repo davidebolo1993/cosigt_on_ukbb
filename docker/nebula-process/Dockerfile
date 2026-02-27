@@ -43,8 +43,7 @@ RUN conda update -y conda && \
         r-optparse \
         r-dplyr \
         r-biocmanager \
-        bioconductor-singlecellexperiment \
-        libgsl
+        bioconductor-singlecellexperiment
 
 ENV PATH=/miniconda/envs/renv/bin:${PATH}
 
