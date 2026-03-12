@@ -240,23 +240,20 @@ else
 fi
 
 ################################################################################
-# Step 4: Build K-mer Filter Index
+# Step 4a: Compute Allele-Specific K-mers (Meryl)
 ################################################################################
 
-echo "[Step 4] Building k-mer filter index"
+echo "[Step 4a] Computing allele-specific k-mers"
 
-KFILT_DIR="${OUTPUT_DIR}/kfilt/index/${CHROM}/${REGION}"
-mkdir -p "$KFILT_DIR"
+MERYL_DIR="${OUTPUT_DIR}/meryl/${CHROM}/${REGION}"
+mkdir -p "$MERYL_DIR"
 
-KFILT_IDX="${KFILT_DIR}/${REGION}.kfilt.idx"
+UNIQUE_KMERS="${MERYL_DIR}/${REGION}.unique_kmers.txt"
 
-if [ ! -f "${INPUT_DIR}/kfilt/index/${CHROM}/${REGION}/${REGION}.kfilt.idx" ]; then
-    
-    MERYL_ALLELES="${OUTPUT_DIR}/meryl/${CHROM}/${REGION}/${REGION}"
-    mkdir -p "$MERYL_ALLELES"
+if [ ! -f "${INPUT_DIR}/meryl/${CHROM}/${REGION}/${REGION}.unique_kmers.txt" ]; then
 
-    MERYL_DIFF="${OUTPUT_DIR}/meryl/${CHROM}/${REGION}/${REGION}_unique"
-    UNIQUE_KMERS="${OUTPUT_DIR}/meryl/${CHROM}/${REGION}/${REGION}.unique_kmers.txt"
+    MERYL_ALLELES="${MERYL_DIR}/${REGION}"
+    MERYL_DIFF="${MERYL_DIR}/${REGION}_unique"
 
     echo "  Computing allele-specific k-mers..."
     MEM_GB=$((THREADS < 8 ? THREADS * 2 : 16))
@@ -265,9 +262,25 @@ if [ ! -f "${INPUT_DIR}/kfilt/index/${CHROM}/${REGION}/${REGION}.kfilt.idx" ]; t
     meryl difference "$MERYL_ALLELES" "$MERYL_REF_DB" output "$MERYL_DIFF"
     meryl print "$MERYL_DIFF" > "$UNIQUE_KMERS"
 
-    kfilt build -k "$UNIQUE_KMERS" -K 31 -o "$KFILT_IDX"
-
     rm -rf "$MERYL_ALLELES" "$MERYL_DIFF"
+else
+    MERYL_DIR="${INPUT_DIR}/meryl/${CHROM}/${REGION}"
+    UNIQUE_KMERS="${MERYL_DIR}/${REGION}.unique_kmers.txt"
+fi
+
+################################################################################
+# Step 4b: Build K-mer Filter Index (kfilt)
+################################################################################
+
+echo "[Step 4b] Building k-mer filter index"
+
+KFILT_DIR="${OUTPUT_DIR}/kfilt/index/${CHROM}/${REGION}"
+mkdir -p "$KFILT_DIR"
+
+KFILT_IDX="${KFILT_DIR}/${REGION}.kfilt.idx"
+
+if [ ! -f "${INPUT_DIR}/kfilt/index/${CHROM}/${REGION}/${REGION}.kfilt.idx" ]; then
+    kfilt build -k "$UNIQUE_KMERS" -K 31 -o "$KFILT_IDX"
 else
     KFILT_DIR="${INPUT_DIR}/kfilt/index/${CHROM}/${REGION}"
     KFILT_IDX="${KFILT_DIR}/${REGION}.kfilt.idx"
@@ -483,6 +496,12 @@ for SAMPLE in "${SAMPLES[@]}"; do
     echo ""
 done
 
+# Small clean-up because at the moment regenerating those file is 
+
+rm ${OUTPUT_DIR}/kfilt/index/${CHROM}/${REGION}/${REGION}.kfilt.idx
+rm ${OUTPUT_DIR}/cluster/${CHROM}/${REGION}/${REGION}.clusters.json
+rm ${OUTPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}.mask.tsv
+
 ################################################################################
 # Completion
 ################################################################################
@@ -492,4 +511,3 @@ echo "==================================================================="
 echo "✓ Region $REGION completed successfully!"
 echo "Results: ${OUTPUT_DIR}/cosigt/*/${CHROM}/${REGION}/"
 echo "==================================================================="
-
