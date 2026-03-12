@@ -472,8 +472,15 @@ process_sample() {
     echo "    ✓ Completed"
 }
 
+TOTAL_SAMPLES=${#SAMPLES[@]}
+PROCESSED=0
+
 for SAMPLE in "${SAMPLES[@]}"; do
     process_sample "$SAMPLE"
+    PROCESSED=$((PROCESSED + 1))
+    PCT=$(awk "BEGIN { printf \"%.1f\", ($PROCESSED / $TOTAL_SAMPLES) * 100 }")
+    echo " Progress: ${PROCESSED}/${TOTAL_SAMPLES} samples (${PCT}%)"
+    echo ""
 done
 
 ################################################################################
