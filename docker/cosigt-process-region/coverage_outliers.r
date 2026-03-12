@@ -70,20 +70,20 @@ node_stats$mask_type <- factor(node_stats$mask_type, levels = c("unmasked", "pan
 mask_table <- node_stats[, .(node, panplexity_mask, coverage_mask, final_mask)]
 fwrite(mask_table, paste0(output_prefix, "_node_masks.tsv"), sep = "\t", quote = FALSE)
 
-total_length <- sum(node_stats$length, na.rm = TRUE)
-summarize_mask <- function(mask_col) sum(node_stats$length[mask_col == 0], na.rm = TRUE)
-panp_masked <- summarize_mask(node_stats$panplexity_mask)
-cov_masked <- summarize_mask(node_stats$coverage_mask)
-both_masked <- summarize_mask(node_stats$final_mask)
-unmasked <- sum(node_stats$length[node_stats$panplexity_mask == 1 & node_stats$coverage_mask == 1], na.rm = TRUE)
+#total_length <- sum(node_stats$length, na.rm = TRUE)
+#summarize_mask <- function(mask_col) sum(node_stats$length[mask_col == 0], na.rm = TRUE)
+#panp_masked <- summarize_mask(node_stats$panplexity_mask)
+#cov_masked <- summarize_mask(node_stats$coverage_mask)
+#both_masked <- summarize_mask(node_stats$final_mask)
+#unmasked <- sum(node_stats$length[node_stats$panplexity_mask == 1 & node_stats$coverage_mask == 1], na.rm = TRUE)
 
-summary_tab <- data.table(
-  mask = c("panplexity_masked", "coverage_masked", "both_masked", "unmasked"),
-  bases = c(panp_masked, cov_masked, both_masked, unmasked),
-  pct_bases = round(100 * c(panp_masked, cov_masked, both_masked, unmasked) / total_length, 2)
-)
-fwrite(summary_tab, paste0(output_prefix, "_mask_summary.tsv"), sep = "\t", quote = FALSE)
+#summary_tab <- data.table(
+#  mask = c("panplexity_masked", "coverage_masked", "both_masked", "unmasked"),
+#  bases = c(panp_masked, cov_masked, both_masked, unmasked),
+#  pct_bases = round(100 * c(panp_masked, cov_masked, both_masked, unmasked) / total_length, 2)
+#)
+#fwrite(summary_tab, paste0(output_prefix, "_mask_summary.tsv"), sep = "\t", quote = FALSE)
 
-fwrite(as.list(node_stats$final_mask),
-       paste0(output_prefix, ".mask.tsv"),
-       sep = "\n", col.names = FALSE)
+#fwrite(as.list(node_stats$final_mask),
+#       paste0(output_prefix, ".mask.tsv"),
+#       sep = "\n", col.names = FALSE)
