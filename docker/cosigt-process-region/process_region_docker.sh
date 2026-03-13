@@ -313,7 +313,7 @@ if [ ! -f "${INPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}.mask.tsv" ]; the
     echo "  Filtering coverage outliers..."
     Rscript /usr/local/bin/coverage_outliers.r \
         "$PATHS_FILE" \
-        "${ODGI_DIR}/paths/${CHROM}/${REGION}/${REGION}" \
+        "${OUTPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}" \
         "$LENGTH_FILE" \
         "$PANPLEXITY_MASK"
 else
@@ -497,7 +497,7 @@ done
 # Small clean-up because at the moment regenerating those file is 
 
 rm ${OUTPUT_DIR}/kfilt/index/${CHROM}/${REGION}/${REGION}.kfilt.idx
-rm ${OUTPUT_DIR}/cluster/${CHROM}/${REGION}/${REGION}.clusters.json
+rm ${OUTPUT_DIR}/cluster/${CHROM}/${REGION}/${REGION}*
 rm ${OUTPUT_DIR}/odgi/paths/${CHROM}/${REGION}/${REGION}.mask.tsv
 
 ################################################################################
